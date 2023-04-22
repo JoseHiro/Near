@@ -15,9 +15,18 @@ const authRoute = require('./routes/auth');
 //controller
 const errorController = require('./controller/error');
 
-app.use(bodyParser.urlencoded({extended: true}));
-app.set('view engine', 'ejs');
-
+// app.use(bodyParser.urlencoded({extended: true}));
+// app.set('view engine', 'ejs');
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader(
+    'Access-Control-Allow-Methods',
+    'OPTIONS, GET, POST, PUT, PATCH, DELETE'
+  );
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
+app.use(bodyParser.json());
 
 // middleware to sumbit user info
 app.use((req, res, next) => {
@@ -28,17 +37,22 @@ app.use((req, res, next) => {
   })
 })
 
+app.get("/api", (req, res, next) => {
+  res.json({ "users": ["Mike", "userTwo", "userThree" ]})
+})
+
 app.use(authRoute);
 app.get('/', (req, res) => {
     res.render('index');
 })
+
 
 app.use(errorController.error);
 
 mongoose
 .connect(mongoDb)
 .then(result => {
-  app.listen(3000);
+  app.listen(8080);
 })
 .catch(err =>{
   console.log(err);
