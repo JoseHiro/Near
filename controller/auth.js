@@ -70,11 +70,15 @@ exports.postLogin = (req, res, next) =>{
 }
 
 exports.getEditUser = (req, res, next) => {
-  res.render('auth/edit-user', {
-    name: req.user.name,
-    email: req.user.email,
-    password: req.user.password
-  });
+  console.log(req.params.userId);
+  User.findById(req.params.userId)
+  .then(user =>{
+    if(!user){
+      console.log('Not found');
+    }else{
+      res.status(200).json({name: user.name, email: user.email, password: user.password})
+    }
+  })
 }
 
 exports.postEditUser = async (req, res, next) =>{
