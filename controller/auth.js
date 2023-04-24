@@ -70,16 +70,14 @@ exports.postLogin = (req, res, next) =>{
 }
 
 exports.getEditUser = (req, res, next) => {
-  console.log(req.params);
-  User.findById('64444fa9459136cdef391833')
+  console.log(req.params.userId);
+  User.findById(req.params.userId)
   .then(user =>{
-    console.log(user);
     if(!user){
-      console.log("didn't work");
-      return ;  // error handler ;
+      console.log('Not found');
+    }else{
+      res.status(200).json({name: user.name, email: user.email, password: user.password})
     }
-
-    // return res.status(200).json({name: user.name, email: user.email, password: user.password})
   })
 }
 
