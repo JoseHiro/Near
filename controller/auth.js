@@ -70,8 +70,6 @@ exports.postLogin = (req, res, next) =>{
 }
 
 exports.getEditUser = (req, res, next) => {
-  console.log(req.params.userId);
-
   User.findById(req.params.userId)
   .then(user =>{
     if(!user){
@@ -83,17 +81,32 @@ exports.getEditUser = (req, res, next) => {
 }
 
 exports.postEditUser = async (req, res, next) =>{
-  let currentUser = req.user;
-  currentUser.name = req.body.name;
-  currentUser.email = req.body.email;
-  currentUser.password = req.body.password;
-
-  const updated = await currentUser.save();
-  res.render('auth/user', {
-      name: req.user.name,
-      email: req.user.email,
-      password: req.user.password,
-    })
+  User.findById(req.params.userId)
+  .then(user =>{
+    if(!user){
+      console.log("No user with that Id");
+      return ;
+    }else{
+      user.name = req.body.name;
+      user.email = req.body.email;
+      return user;
+    }
+  })
+  .then(user =>{
+    if(req.body.password !== user.password && bcrypt.compare(req.body.password, user.password)){
+      console.log('update password')
+      bcrypt.hash(req.body.password, 12)
+      .then(hashedPw =>{ user.password = hashedPw;})
+      .then(() =>{ user.save()})
+    }else{
+      user.save();
+    }
+    return user;
+  })
+  .then(user =>{
+    console.log(user);
+    res.status(201).json({ message: 'Update success!', userId: user.id})
+  })
 }
 
 exports.userInfo = (req, res, next) => {
@@ -102,4 +115,13 @@ exports.userInfo = (req, res, next) => {
     email: req.user.email,
     password: req.user.password,
   });
+}
+
+exports.deleteUser = (req, res, next) =>{
+  console.log(req.params.userId);
+  User.deleteOne({_id: req.params.userId})
+  .then(result =>{
+    console.log(result);
+    res.status(200).json({message: "Deleted"});
+  })
 }
