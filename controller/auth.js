@@ -70,11 +70,12 @@ exports.postLogin = (req, res, next) =>{
 }
 
 exports.getEditUser = (req, res, next) => {
-  res.render('auth/edit-user', {
-    name: req.user.name,
-    email: req.user.email,
-    password: req.user.password
-  });
+  console.log(req.params.userId);
+  // res.render('auth/edit-user', {
+  //   name: req.user.name,
+  //   email: req.user.email,
+  //   password: req.user.password
+  // });
 }
 
 exports.postEditUser = async (req, res, next) =>{
