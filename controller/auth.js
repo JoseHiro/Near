@@ -1,7 +1,7 @@
 const express = require('express');
 const User = require('../model/user');
 const jwt = require('jsonwebtoken');
-
+const bcrypt = require('bcrypt');
 
 exports.getSignIn = (req, res, next) => {
   res.render('auth/signin');
@@ -12,20 +12,22 @@ exports.postSignIn = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
-
   if(name && email && password){
-    let user = new User({
-      name: name,
-      email: email,
-      password: password
+    bcrypt.hash(password, 12)
+    .then(hashedPw =>{
+      let user = new User({
+        name: name,
+        email: email,
+        password: hashedPw
+      })
+      return user.save();
     })
-    console.log(user);
-    user.save();
-    res.status(201).json({ message: 'User created!', userId: user.id})
-    res.redirect('/');
+    .then(user =>{
+      console.log('Successfully creared User');
+      res.status(201).json({ message: 'User created!', userId: user.id})
+    })
   }else{
     console.log('missing email or address');
-    res.redirect('/');
   }
 }
 
@@ -40,25 +42,23 @@ exports.postLogin = (req, res, next) =>{
   if(email && password){
     User.findOne({email: email})
     .then(user => {
-      if(user.password = password){
-        console.log('found your account');
-        console.log(user);
-
-        loadedUser = user;
-
-        const token = jwt.sign(
-        {
-          email: loadedUser.email,
-          userId: loadedUser._id.toString()
-        },
-        'somesupersecretsecret',
-        { expiresIn: '1h' }
-        );
-        res.status(200).json({ token: token, userId: loadedUser._id.toString() });
-      }else{
+      loadedUser = user;
+      return bcrypt.compare(password, user.password)
+    })
+    .then(isEqual =>{
+      if(!isEqual){
         console.log('wrong password');
-        console.log(user);
       }
+      console.log('found your account');
+      const token = jwt.sign(
+      {
+        email: loadedUser.email,
+        userId: loadedUser._id.toString()
+      },
+      'somesupersecretsecret',
+      // { expiresIn: '1h' }
+      );
+      res.status(200).json({ token: token, userId: loadedUser._id.toString()});
     })
     .catch(err => {
       console.log(err);
@@ -71,11 +71,15 @@ exports.postLogin = (req, res, next) =>{
 
 exports.getEditUser = (req, res, next) => {
   console.log(req.params.userId);
-  // res.render('auth/edit-user', {
-  //   name: req.user.name,
-  //   email: req.user.email,
-  //   password: req.user.password
-  // });
+
+  User.findById(req.params.userId)
+  .then(user =>{
+    if(!user){
+      console.log('Not found');
+    }else{
+      res.status(200).json({name: user.name, email: user.email, password: user.password})
+    }
+  })
 }
 
 exports.postEditUser = async (req, res, next) =>{
