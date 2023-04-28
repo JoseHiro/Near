@@ -7,10 +7,12 @@ dotenv.config();
 
 const User = require('./model/user');
 
+
 const mongoDb = process.env.MONGO_DB_PASS;
 
 // Routes
 const authRoute = require('./routes/auth');
+const wotkRoute = require('./routes/work');
 
 //controller
 const errorController = require('./controller/error');
@@ -42,6 +44,7 @@ app.get("/api", (req, res, next) => {
 })
 
 app.use(authRoute);
+app.use(wotkRoute);
 app.get('/', (req, res) => {
     res.render('index');
 })

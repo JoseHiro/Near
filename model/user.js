@@ -14,6 +14,10 @@ const UserSchema = new Schema({
   password: {
     type: String,
     required: true
+  },
+  works: {
+    type: Schema.Types.ObjectId,
+    ref: 'Work'
   }
 });
 
