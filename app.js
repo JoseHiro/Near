@@ -12,7 +12,7 @@ const mongoDb = process.env.MONGO_DB_PASS;
 
 // Routes
 const authRoute = require('./routes/auth');
-const wotkRoute = require('./routes/work');
+const workRoute = require('./routes/post');
 
 //controller
 const errorController = require('./controller/error');
@@ -44,7 +44,7 @@ app.get("/api", (req, res, next) => {
 })
 
 app.use(authRoute);
-app.use(wotkRoute);
+app.use(workRoute);
 app.get('/', (req, res) => {
     res.render('index');
 })

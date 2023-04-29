@@ -1,5 +1,5 @@
 const express = require('express');
-const Work = require('../model/work');
+const Work = require('../model/post');
 
 exports.postWork = (req, res, next) => {
   const {title, category, imageUrl, description, price} = req.body;
@@ -22,4 +22,30 @@ exports.postWork = (req, res, next) => {
   }else{
     console.log("Missing input");
   }
+}
+
+exports.getAllPosts = (req, res, next) => {
+  Work.find({})
+  .then(posts =>{
+    res.status(200).json({posts: posts})
+  })
+}
+
+exports.getPost = (req, res, next) => {777
+  Work.findById(req.params.postId)
+  .then(post =>{
+    res.status(200).json({post: post})
+  })
+}
+
+exports.getEditPost = (req, res, next) => {
+
+}
+
+exports.postEditPost = (req, res, next) => {
+
+}
+
+exports.deletePost = (req, res, next) => {
+
 }
