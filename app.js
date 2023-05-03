@@ -7,7 +7,6 @@ dotenv.config();
 
 const User = require('./model/user');
 
-
 const mongoDb = process.env.MONGO_DB_PASS;
 
 // Routes
@@ -31,13 +30,13 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 
 // middleware to sumbit user info
-app.use((req, res, next) => {
-  User.findById('643dd1dc4e16ace7a350aeeb')
-  .then(user =>{
-    req.user = user;
-    next();
-  })
-})
+// app.use((req, res, next) => {
+//   User.findById('643dd1dc4e16ace7a350aeeb')
+//   .then(user =>{
+//     req.user = user;
+//     next();
+//   })
+// })
 
 app.get("/api", (req, res, next) => {
   res.json({ "users": ["Mike", "userTwo", "userThree" ]})
