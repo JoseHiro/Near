@@ -36,37 +36,44 @@ exports.getLogin = (req, res, next) =>{
 }
 
 exports.postLogin = (req, res, next) =>{
-  const email = req.body.email;
-  const password = req.body.password;
-  let loadedUser;
-  if(email && password){
-    User.findOne({email: email})
-    .then(user => {
-      loadedUser = user;
-      return bcrypt.compare(password, user.password)
-    })
-    .then(isEqual =>{
-      if(!isEqual){
-        console.log('wrong password');
-      }
-      console.log('found your account');
-      const token = jwt.sign(
-      {
-        email: loadedUser.email,
-        userId: loadedUser._id.toString()
-      },
-      'somesupersecretsecret',
-      // { expiresIn: '1h' }
-      );
-      res.status(200).json({ token: token, userId: loadedUser._id.toString()});
-    })
-    .catch(err => {
-      console.log(err);
-    })
+  const {email, password} = req.body;
 
-  }else{
-    console.log('not good');
+  let loadedUser;
+  let emptyFields = [];
+
+  if(!email) emptyFields.push('email');
+  if(!password) emptyFields.push('password');
+  if(emptyFields.length > 0){
+    return res.status(400).json({error: 'Please fill in all the fields', emptyFields})
   }
+
+  User.findOne({email: email})
+  .then(user => {
+    if(!user){
+      res.status(400).json({message: 'No user'});
+    }
+    loadedUser = user;
+    return bcrypt.compare(password, user.password)
+  })
+  .then(isEqual =>{
+    if(!isEqual){
+      return res.status(400).json({message: 'No user'});
+    }
+    console.log('found your account');
+    const token = jwt.sign(
+    {
+      email: loadedUser.email,
+      userId: loadedUser._id.toString()
+    },
+    'somesupersecretsecret',
+    // { expiresIn: '1h' }
+    );
+    return res.status(200).json({ token: token, userId: loadedUser._id.toString()});
+  })
+  .catch(err => {
+    res.status(400).json({error: err});
+  })
+
 }
 
 exports.getEditUser = (req, res, next) => {
