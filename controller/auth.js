@@ -2,62 +2,66 @@ const express = require('express');
 const User = require('../model/user');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const { validationResult } = require('express-validator');
 
-exports.getSignIn = (req, res, next) => {
-  res.render('auth/signin');
-}
+exports.postSignIn = async (req, res, next) => {
+  let result = validationResult(req);
+  let errorFields = [];
 
-exports.postSignIn = (req, res, next) => {
-  const name = req.body.name;
-  const email = req.body.email;
-  const password = req.body.password;
-
-  if(name && email && password){
-    bcrypt.hash(password, 12)
-    .then(hashedPw =>{
-      let user = new User({
-        name: name,
-        email: email,
-        password: hashedPw
-      })
-      return user.save();
-    })
-    .then(user =>{
-      console.log('Successfully creared User');
-      res.status(201).json({ message: 'User created!', userId: user.id})
-    })
-  }else{
-    console.log('missing email or address');
+  if (!result.isEmpty()){
+    errorMessages = result.array().map(result => result.msg);
+    errorFields = result.array().map(result => result.path);
+    return res.status(400).json({ message: errorMessages, errorFields });
   }
-}
 
-exports.getLogin = (req, res, next) =>{
-  res.render('auth/login');
+  const { name, email, password } = req.body;
+
+  if(!name) errorFields.push('name');
+  if(!email) errorFields.push('email');
+  if(!password) errorFields.push('password');
+
+  if(errorFields.length > 0){
+    return res.status(400).json({ message: 'Please fill in the fields', errorFields});
+  }
+
+  try{
+    const hashedPw = await bcrypt.hash(password, 12);
+    let user = new User({ name: name, email: email, password: hashedPw });
+    if(!user){
+      new Error("Something occured, try again");
+    }
+    user = await user.save();
+    return res.status(201).json({ message: 'Successed to make your account!', userId: user.id});
+  }catch(error){
+    return res.status(400).json({ message: error });
+  }
 }
 
 exports.postLogin = (req, res, next) =>{
   const {email, password} = req.body;
 
   let loadedUser;
-  let emptyFields = [];
+  let errorFields = [];
 
-  if(!email) emptyFields.push('email');
-  if(!password) emptyFields.push('password');
-  if(emptyFields.length > 0){
-    return res.status(400).json({error: 'Please fill in all the fields', emptyFields})
+  if(!email) errorFields.push('email');
+  if(!password) errorFields.push('password');
+  if(errorFields.length > 0){
+    console.log(errorFields);
+    return res.status(400).json({ message: 'Please fill in all the fields', errorFields})
   }
 
   User.findOne({email: email})
   .then(user => {
     if(!user){
-      res.status(400).json({message: 'No user'});
+      res.status(400).json({message: 'No account exist with that email'});
     }
     loadedUser = user;
     return bcrypt.compare(password, user.password)
   })
   .then(isEqual =>{
     if(!isEqual){
-      return res.status(400).json({message: 'No user'});
+      console.log("Wrong password");
+      return res.status(400).json({message: 'Wrong Password'});
     }
     console.log('found your account');
     const token = jwt.sign(
@@ -71,9 +75,8 @@ exports.postLogin = (req, res, next) =>{
     return res.status(200).json({ token: token, userId: loadedUser._id.toString()});
   })
   .catch(err => {
-    res.status(400).json({error: err});
+    res.status(400).json({ message: err});
   })
-
 }
 
 exports.getEditUser = (req, res, next) => {
@@ -88,32 +91,31 @@ exports.getEditUser = (req, res, next) => {
 }
 
 exports.postEditUser = async (req, res, next) =>{
-  User.findById(req.params.userId)
-  .then(user =>{
-    if(!user){
-      console.log("No user with that Id");
-      return ;
-    }else{
-      user.name = req.body.name;
-      user.email = req.body.email;
-      return user;
-    }
-  })
-  .then(user =>{
-    if(req.body.password !== user.password && bcrypt.compare(req.body.password, user.password)){
-      console.log('update password')
-      bcrypt.hash(req.body.password, 12)
-      .then(hashedPw =>{ user.password = hashedPw;})
-      .then(() =>{ user.save()})
-    }else{
-      user.save();
-    }
-    return user;
-  })
-  .then(user =>{
-    console.log(user);
-    res.status(201).json({ message: 'Update success!', userId: user.id})
-  })
+  let errorFields = [];
+  const {name, email, password} = req.body;
+
+  if(!name) errorFields.push('name');
+  if(!email) errorFields.push('email');
+  if(!password) errorFields.push('password');
+  if(errorFields.length > 0){
+    console.log('hello');
+    return res.status(400).json({ message: "Don't leave an empty space", errorFields });
+  }
+
+  let user = await User.findById(req.userId);
+
+  if(!user){
+    return res.status(400).json({ message: "An issued occured! No User found" })
+  }
+  user.name = name;
+  user.email = email;
+  if(password !== user.password && bcrypt.compare(password, user.password)){
+    console.log('update password')
+    const hashwePw = await bcrypt.hash(password, 12);
+  }
+
+  user.save();
+  return res.status(201).json({ message: 'Updated', userId: user.id});
 }
 
 exports.userInfo = (req, res, next) => {
