@@ -2,11 +2,34 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controller/auth');
 const isAuth = require('../middleware/is-auth');
+const { check } = require('express-validator');
 
-router.get('/signin', authController.getSignIn);
-router.post('/signin', authController.postSignIn);
-router.get('/login', authController.getLogin);
-router.post('/login', authController.postLogin);
+router.post('/signin',
+ [
+  check('name')
+    .trim()
+    .isAlpha()
+    .withMessage('You can only use Alphabet'),
+  check('email', 'Use a valid email')
+    .trim()
+    .isEmail()
+    .withMessage('Provide a valid Email'),
+  check('password')
+    .trim()
+    .isAlphanumeric()
+    .isLength({ min : 8})
+    .withMessage('Password needs more than 8 letters with alphabet and numeric characters')
+ ],
+  authController.postSignIn
+);
+
+router.post('/login',
+ [
+  check('email'),
+  check('password')
+ ],
+authController.postLogin);
+
 router.get('/user/edit/:userId', authController.getEditUser);
 router.put('/user/edit/:userId', isAuth, authController.postEditUser);
 router.delete('/user/delete/:userId', authController.deleteUser)

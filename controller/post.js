@@ -1,27 +1,35 @@
 const express = require('express');
 const Post = require('../model/post');
 
-exports.postWork = (req, res, next) => {
-  const {title, category, imageUrl, description, price} = req.body;
-  if(title && category && imageUrl && description && price){
-    const post = new Post({
-      title: title,
-      category: category,
-      imageUrl: imageUrl,
-      description: description,
-      price: price,
-      poster: req.params.userId
-    })
+exports.postWork = async (req, res, next) => {
+  let emptyFields = [];
+  const { title, category, imageUrl, description, price } = req.body;
 
-    post.save()
-    .then(() =>{
-      console.log("success!");
-      return res.status(200).json({ messege: "Success to creat work post", postId : post._id})
-    });
+  if(title) emptyFields.push('title');
+  if(category) emptyFields.push('category');
+  if(imageUrl) emptyFields.push('imageUrl');
+  if(description) emptyFields.push('description');
+  if(price) emptyFields.push('price');
 
-  }else{
-    console.log("Missing input");
+  if(emptyFields.length > 0){
+    res.status(400).json({ message: '', emptyFields });
   }
+
+  const post = new Post({
+    title: title,
+    category: category,
+    imageUrl: imageUrl,
+    description: description,
+    price: price,
+    poster: req.params.userId
+  })
+
+  post = await post.save();
+  if(!post){
+    res.status(400).json({ messege: "Failed for some reason" })
+  }
+
+  return res.status(200).json({ messege: "Success to creat work post", postId : post._id})
 }
 
 exports.getAllPosts = (req, res, next) => {
