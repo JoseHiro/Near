@@ -9,8 +9,8 @@ exports.postSignIn = async (req, res, next) => {
   let errorFields = [];
 
   if (!result.isEmpty()){
-    errorMessages = result.array().map(result => result.msg);
-    errorFields = result.array().map(result => result.path);
+    errorMessages = result.array()[0].msg;
+    errorFields = result.array()[0].path;
     return res.status(400).json({ message: errorMessages, errorFields });
   }
 
@@ -79,15 +79,13 @@ exports.postLogin = (req, res, next) =>{
   })
 }
 
-exports.getEditUser = (req, res, next) => {
-  User.findById(req.params.userId)
-  .then(user =>{
-    if(!user){
-      console.log('Not found');
-    }else{
-      res.status(200).json({name: user.name, email: user.email, password: user.password})
-    }
-  })
+exports.getEditUser = async (req, res, next) => {
+  const user = await User.findById(req.params.userId)
+  if(!user){
+    return res.status(400).json({message: 'No user found'})
+  }else{
+    res.status(200).json({message: 'Found user', user})
+  }
 }
 
 exports.postEditUser = async (req, res, next) =>{

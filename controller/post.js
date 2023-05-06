@@ -2,17 +2,17 @@ const express = require('express');
 const Post = require('../model/post');
 
 exports.postWork = async (req, res, next) => {
-  let emptyFields = [];
+  let errorFields = [];
   const { title, category, imageUrl, description, price } = req.body;
 
-  if(title) emptyFields.push('title');
-  if(category) emptyFields.push('category');
-  if(imageUrl) emptyFields.push('imageUrl');
-  if(description) emptyFields.push('description');
-  if(price) emptyFields.push('price');
+  if(!title) errorFields.push('title');
+  if(!category) errorFields.push('category');
+  if(!imageUrl) errorFields.push('imageUrl');
+  if(!description) errorFields.push('description');
+  if(!price) errorFields.push('price');
 
-  if(emptyFields.length > 0){
-    res.status(400).json({ message: '', emptyFields });
+  if(errorFields.length > 0){
+    return res.status(400).json({ message: 'Fill in all the fields', errorFields });
   }
 
   const post = new Post({
@@ -21,12 +21,12 @@ exports.postWork = async (req, res, next) => {
     imageUrl: imageUrl,
     description: description,
     price: price,
-    poster: req.params.userId
+    poster: req.userId
   })
 
   post = await post.save();
   if(!post){
-    res.status(400).json({ messege: "Failed for some reason" })
+    return res.status(400).json({ messege: "Failed for some reason" })
   }
 
   return res.status(200).json({ messege: "Success to creat work post", postId : post._id})
@@ -39,42 +39,52 @@ exports.getAllPosts = (req, res, next) => {
   })
 }
 
-exports.getPost = (req, res, next) => {777
+exports.getPost = (req, res, next) => {
   Post.findById(req.params.postId)
   .then(post =>{
     res.status(200).json({post: post})
   })
 }
 
-exports.getEditPost = (req, res, next) => {
+exports.getEditPost = async(req, res, next) => {
   const postId = req.params.postId;
-  console.log(postId);
-  Post.findById(postId)
-  .then(post => {
+  const post = await Post.findById(postId)
     if(!post){
-      console.log('No post');
+      return res.status(400).json({message: "Something went wrong"})
     }
-    res.status(200).json({message: "Found post", post: post})
-  })
+
+  await post.save();
+  return res.status(200).json({ message: "Found post", post})
 }
 
-exports.postEditPost = (req, res, next) => {
-  const postId = req.params.postId;
-  Post.findById(postId)
-  .then(post => {
-    if(!post){
-      console.log('No post');
-    }
-    post.title = req.body.title;
-    post.category = req.body.category;
-    post.imageUrl = req.body.imageUrl;
-    post.description = req.body.description;
-    post.price = req.body.price;
+exports.postEditPost = async (req, res, next) => {
+  let errorFields = [];
+  const {title, category, imageUrl, description, price } = req.body;
 
-    return post.save();
-  }).then(result => {
-    res.status(200).json({message: 'Success updating!'})
-  })
+  if(!title) errorFields.push('title');
+  if(!category) errorFields.push('category');
+  if(!imageUrl) errorFields.push('imageUrl');
+  if(!description) errorFields.push('description');
+  if(!price) errorFields.push('price');
+
+  if(errorFields.length > 0){
+    return res.status(400).json({ message: 'Fill in all the fields', errorFields });
+  }
+
+  const postId = req.params.postId;
+  let post = await Post.findById(postId)
+  if(!post){
+    return res.status(400).json({message: "No post was found to update"})
+  }
+
+  post.title = title;
+  post.category = category;
+  post.imageUrl = imageUrl;
+  post.description = description;
+  post.price = price;
+
+  await post.save();
+  return res.status(200).json({message: 'Success updating!'})
 }
 
 exports.deletePost = (req, res, next) => {
