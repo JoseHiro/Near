@@ -15,9 +15,15 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
-  works: {
+  profile: {
+    type: String
+  },
+  experience: {
+    type: String
+  },
+  Posts: {
     type: Schema.Types.ObjectId,
-    ref: 'Work'
+    ref: 'Post'
   }
 });
 

@@ -1,5 +1,6 @@
 const express = require('express');
 const Post = require('../model/post');
+const User = require('../model/user');
 
 exports.postWork = async (req, res, next) => {
   let errorFields = [];
@@ -39,16 +40,30 @@ exports.getAllPosts = (req, res, next) => {
   })
 }
 
-exports.getPost = (req, res, next) => {
-  Post.findById(req.params.postId)
-  .then(post =>{
-    res.status(200).json({post: post})
-  })
+exports.getPost = async (req, res, next) => {
+  const postId = req.params.postId;
+  let getPost = await Post.findById(postId).populate('poster');
+  if(!getPost){
+    return res.status(400).json({ message: "Didn't find the post" })
+  }
+  const {name, _id} = getPost.poster;
+  const post = {
+    id: getPost._id.toString(),
+    title: getPost.title,
+    imageUrl: getPost.imageUrl,
+    category: getPost.category,
+    description: getPost.description,
+    price: getPost.price,
+    postId: _id.toString(),
+    poster: name,
+  }
+
+  return res.status(200).json({ message: 'Found post', post: post });
 }
 
 exports.getEditPost = async(req, res, next) => {
   const postId = req.params.postId;
-  const post = await Post.findById(postId)
+  const post = await Post.findById(postId);
     if(!post){
       return res.status(400).json({message: "Something went wrong"})
     }
