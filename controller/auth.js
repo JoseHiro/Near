@@ -37,7 +37,7 @@ exports.postSignIn = async (req, res, next) => {
   }
 }
 
-exports.postLogin = (req, res, next) =>{
+exports.postLogin = async (req, res, next) =>{
   const {email, password} = req.body;
 
   let loadedUser;
@@ -50,33 +50,30 @@ exports.postLogin = (req, res, next) =>{
     return res.status(400).json({ message: 'Please fill in all the fields', errorFields})
   }
 
-  User.findOne({email: email})
-  .then(user => {
-    if(!user){
-      res.status(400).json({message: 'No account exist with that email'});
-    }
-    loadedUser = user;
-    return bcrypt.compare(password, user.password)
-  })
-  .then(isEqual =>{
-    if(!isEqual){
-      console.log("Wrong password");
-      return res.status(400).json({message: 'Wrong Password'});
-    }
-    console.log('found your account');
-    const token = jwt.sign(
-    {
-      email: loadedUser.email,
-      userId: loadedUser._id.toString()
-    },
-    'somesupersecretsecret',
-    // { expiresIn: '1h' }
-    );
-    return res.status(200).json({ token: token, userId: loadedUser._id.toString()});
-  })
-  .catch(err => {
-    res.status(400).json({ message: err});
-  })
+  const user = await User.findOne({email: email})
+  if(!user){
+    return res.status(400).json({message: 'No account exist with that email'});
+  }
+
+  loadedUser = user;
+  const isEqual = await bcrypt.compare(password, user.password)
+
+  if(!isEqual){
+    console.log("Wrong password");
+    return res.status(400).json({message: 'Wrong Password'});
+  }
+
+  console.log('found your account');
+  const token = jwt.sign(
+  {
+    email: loadedUser.email,
+    userId: loadedUser._id.toString()
+  },
+  'somesupersecretsecret',
+  // { expiresIn: '1h' }
+  );
+
+  return res.status(200).json({ token: token, userId: loadedUser._id.toString(), userName: user.name});
 }
 
 exports.getEditUser = async (req, res, next) => {
@@ -96,7 +93,6 @@ exports.postEditUser = async (req, res, next) =>{
   if(!email) errorFields.push('email');
   if(!password) errorFields.push('password');
   if(errorFields.length > 0){
-    console.log('hello');
     return res.status(400).json({ message: "Don't leave an empty space", errorFields });
   }
 
@@ -131,4 +127,27 @@ exports.deleteUser = (req, res, next) =>{
     console.log(result);
     res.status(200).json({message: "Deleted"});
   })
+}
+
+exports.postEditProfileUser = async (req, res, next) => {
+  const {profile, experience} = req.body;
+  let errorFields = [];
+
+  if(!profile) errorFields.push('profile');
+  if(!experience) errorFields.push('experience');
+
+  if(errorFields.length > 0 ){
+    return res.status(400).json({message: 'Fill in all the fields', errorFields})
+  }
+
+  const userId = req.params.userId;
+  let user = await User.findById(userId);
+  if(!user){
+    return res.status(400).json({message: 'No user is found'})
+  }
+
+  user.profile = profile;
+  user.experience = experience;
+  user.save();
+  return res.status(400).json({message: 'Updated your profile'})
 }
