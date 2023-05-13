@@ -32,8 +32,10 @@ authController.postLogin);
 
 // router.get('/user/edit-profile/:userId', authController.getEditProfileUser)
 router.put('/user/edit-profile/:userId', authController.postEditProfileUser)
-router.get('/user/edit/:userId', authController.getEditUser);
-router.put('/user/edit/:userId', isAuth, authController.postEditUser);
+
+router.get('/user/edit', isAuth, authController.getEditUser);
+router.put('/user/edit', isAuth, authController.postEditUser);
+
 router.delete('/user/delete/:userId', authController.deleteUser)
 router.get('/user', authController.userInfo);
 

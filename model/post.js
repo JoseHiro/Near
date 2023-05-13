@@ -16,10 +16,26 @@ const PostSchema = new Schema({
   },
   description: {
     type: String,
-    required: true
+    // required: true
   },
   price: {
-    type: Number
+    type: Number,
+    required: true
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required : true,
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+    }
+  },
+  locationName:{
+    type: String,
+    required: true
   },
   poster: {
     type: Schema.Types.ObjectId,

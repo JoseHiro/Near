@@ -77,11 +77,11 @@ exports.postLogin = async (req, res, next) =>{
 }
 
 exports.getEditUser = async (req, res, next) => {
-  const user = await User.findById(req.params.userId)
+  const user = await User.findById(req.userId)
   if(!user){
     return res.status(400).json({message: 'No user found'})
   }else{
-    res.status(200).json({message: 'Found user', user})
+    return res.status(200).json({message: 'Found user', user})
   }
 }
 
