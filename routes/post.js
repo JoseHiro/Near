@@ -15,5 +15,7 @@ router.get('/user/posts', isAuth, workController.getUserPost)
 
 router.delete('/post/delete', isAuth, workController.deletePost);
 
+router.get('/posts/search/:keyWord', workController.searchPost)
+
 
 module.exports = router;

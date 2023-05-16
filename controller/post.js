@@ -50,6 +50,7 @@ exports.getAllPosts = (req, res, next) => {
 }
 
 exports.getPost = async (req, res, next) => {
+
   const userId = req.userId;
   const postId = req.params.postId;
   let getPost = await Post.findById(postId).populate('poster');
@@ -60,6 +61,7 @@ exports.getPost = async (req, res, next) => {
 
   const {name, _id} = getPost.poster;
   const isPoster = _id.toString() === userId;
+
   const post = {
     id: getPost._id.toString(),
     title: getPost.title,
@@ -137,4 +139,16 @@ exports.deletePost = async (req, res, next) => {
   }else{
     return res.status(400).json({ message: "Failed to delete"})
   }
+}
+
+exports.searchPost = async (req, res, next) => {
+  const keyWord = req.params.keyWord;
+  const regex = new RegExp(keyWord, 'i')
+  const posts = await Post.find({$or : [{title: regex}, {description: regex}]})
+  if(posts.length === 0){
+    return res.status(400).json({ message: "No post"})
+  }else{
+    return res.status(400).json({ message: "Found posts", posts })
+  }
+  console.log(posts);
 }
