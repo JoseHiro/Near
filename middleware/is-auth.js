@@ -7,7 +7,7 @@ module.exports = (req, res, next) => {
   if(!authHeader){
     return res.status(400).json({ message: "Authenctication failed"})
   }
-  
+
   let decodedToken;
 
   try {

@@ -17,7 +17,7 @@ router.post('/signin',
   check('password')
     .trim()
     .isAlphanumeric()
-    .isLength({ min : 8})
+    .isLength({ min : 6})
     .withMessage('Password needs more than 8 letters with alphabet and numeric characters')
  ],
   authController.postSignIn
