@@ -69,7 +69,7 @@ exports.getPost = async (req, res, next) => {
     category: getPost.category,
     description: getPost.description,
     price: getPost.price,
-    postId: _id.toString(),
+    posterId: _id.toString(),
     poster: name,
   }
 
